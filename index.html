@@ -31,7 +31,6 @@ body{
 }
 .wrap{max-width:520px;margin:0 auto}
 
-/* ============ CARD HEADER (dark green) ============ */
 .card-head{
   position:relative;
   margin-top:calc(16px + env(safe-area-inset-top));
@@ -83,7 +82,6 @@ body{
 }
 .balance .value small{font-size:15px;margin-right:3px;opacity:.85;font-weight:600}
 
-/* ============ STATS ROW ============ */
 .stats{
   display:grid;grid-template-columns:repeat(3,1fr);
   gap:1px;margin-top:14px;
@@ -99,7 +97,6 @@ body{
 .stat .val.gold{color:#a37b18}
 .stat .key{font-size:11px;color:var(--faint);margin-top:6px;letter-spacing:.08em}
 
-/* ============ SECTION TITLE ============ */
 .sec-title{
   display:flex;align-items:center;gap:10px;
   margin:26px 4px 12px;
@@ -108,7 +105,6 @@ body{
 }
 .sec-title::after{content:'';flex:1;height:1px;background:var(--line)}
 
-/* ============ DAY GROUP ============ */
 .day{
   background:#fff;
   border:1px solid var(--line);
@@ -181,45 +177,37 @@ body{
 .amount.minus{color:var(--orange)}
 .amount.plus{color:var(--green)}
 
-/* ============ BARCODE PANEL ============ */
-.barcode-panel{
+.qr-panel{
   margin-top:22px;
-  padding:18px 14px 16px;
+  padding:18px;
   background:#f7faf8;
   border:1px solid var(--line);
   border-radius:16px;
   text-align:center;
-  overflow:hidden;
 }
-.barcode-panel .barcode-box{
+.qr-panel .qr-box{
   display:inline-block;
-  max-width:100%;
-  padding:12px 10px;
+  padding:12px;
   background:#fff;
-  border-radius:10px;
+  border-radius:12px;
   box-shadow:0 4px 14px -8px rgba(20,60,45,.35);
   line-height:0;
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
+  min-width:150px;min-height:150px;
 }
-.barcode-panel .barcode-box svg{
-  display:block;
-  max-width:100%;
-  height:auto;
-}
-.barcode-panel .barcode-tip{
-  margin-top:12px;
+.qr-panel .qr-box img,
+.qr-panel .qr-box canvas{display:block;margin:0 auto}
+.qr-panel .qr-tip{
+  margin-top:14px;
   font-size:12.5px;color:var(--green-mid);
   letter-spacing:.06em;
 }
-.barcode-panel .barcode-url{
+.qr-panel .qr-url{
   margin-top:6px;
   font-size:11px;color:var(--faint);
   word-break:break-all;
   font-family:ui-monospace,Menlo,Consolas,monospace;
 }
 
-/* ============ FOOTER ============ */
 .foot{
   text-align:center;margin-top:26px;
   font-size:11.5px;color:#b3bdb8;letter-spacing:.12em;
@@ -230,7 +218,6 @@ body{
 <body>
 <div class="wrap">
 
-  <!-- ===== CARD HEADER ===== -->
   <div class="card-head">
     <div class="card-top">
       <div class="chip"></div>
@@ -239,7 +226,7 @@ body{
 
     <div class="holder">
       <div class="name">路 辰</div>
-      <div class="card-no">NO.20150901</div>
+      <div class="card-no">NO.20150319</div>
     </div>
 
     <div class="balance">
@@ -248,7 +235,6 @@ body{
     </div>
   </div>
 
-  <!-- ===== STATS ===== -->
   <div class="stats">
     <div class="stat">
       <div class="val gold" id="statSpend">¥0.00</div>
@@ -266,28 +252,18 @@ body{
 
   <div class="sec-title" id="dateRange">—</div>
 
-  <!-- ===== TIMELINE (rendered by JS) ===== -->
   <div id="timeline"></div>
 
-  <!-- ===== BARCODE ===== -->
-  <div class="barcode-panel">
-    <div class="barcode-box">
-      <svg id="barcode"></svg>
-    </div>
-    <div class="barcode-tip">扫码查看完整消费记录</div>
-    <div class="barcode-url" id="barcodeUrl"></div>
+  <div class="qr-panel">
+    <div class="qr-box" id="qrBox"></div>
+    <div class="qr-tip">扫码查看完整消费记录</div>
+    <div class="qr-url" id="qrUrl"></div>
   </div>
 
   <div class="foot">— 越城中学 · 共 <b id="footCount">0</b> 条记录 —</div>
 </div>
 
 <script>
-/* =========================================================
-   DATA SOURCE
-   Modify this array to change the transaction records.
-   type  : open | recharge | food | shop | library | in | out
-   delta : positive = income, negative = expense, omit = no amount
-   ========================================================= */
 const RECORDS = [
   { date:'2015.09.01', weekday:'周二', items:[
     { time:'09:07', type:'open',     text:'开卡成功' },
@@ -373,16 +349,8 @@ const RECORDS = [
   ]}
 ];
 
-/* =========================================================
-   PAGE URL
-   Put the real online address of this page here.
-   The barcode below encodes this URL.
-   ========================================================= */
 const PAGE_URL = 'https://luchenyuecheng.github.io/LuChenCard/';
 
-/* =========================================================
-   RENDER
-   ========================================================= */
 (function render(){
   let balance     = 0;
   let totalSpend  = 0;
@@ -445,50 +413,32 @@ const PAGE_URL = 'https://luchenyuecheng.github.io/LuChenCard/';
   document.getElementById('dateRange').textContent    =
     RECORDS[0].date + ' — ' + RECORDS[RECORDS.length - 1].date;
 
-  document.getElementById('barcodeUrl').textContent = PAGE_URL;
+  document.getElementById('qrUrl').textContent = PAGE_URL;
 })();
 
-/* =========================================================
-   BARCODE
-   Loads JsBarcode from CDN and draws PAGE_URL as CODE128.
-   Falls back to plain text if the CDN is unavailable.
-   ========================================================= */
-(function buildBarcode(){
-  const svg = document.getElementById('barcode');
-  const box = svg.parentNode;
+(function buildQr(){
+  const box = document.getElementById('qrBox');
 
   function fallback(){
-    box.style.padding = '14px';
+    box.style.padding = '16px';
     box.style.fontSize = '10px';
     box.style.wordBreak = 'break-all';
     box.textContent = PAGE_URL;
   }
 
-  function draw(widthValue){
-    JsBarcode(svg, PAGE_URL, {
-      format:       'CODE128',
-      width:        widthValue,
-      height:       72,
-      displayValue: false,
-      margin:       6,
-      background:   '#ffffff',
-      lineColor:    '#0d3627'
-    });
-  }
-
   const script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js';
+  script.src = 'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js';
 
   script.onload = function(){
     try {
-      draw(2);
-
-      const maxW  = box.clientWidth - 20;
-      const curW  = svg.getBoundingClientRect().width;
-      if (maxW > 0 && curW > maxW) {
-        const ratio = maxW / curW;
-        draw(Math.max(0.9, 2 * ratio));
-      }
+      new QRCode(box, {
+        text: PAGE_URL,
+        width: 170,
+        height: 170,
+        colorDark: '#0d3627',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
     } catch (e) {
       fallback();
     }
